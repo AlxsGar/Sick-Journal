@@ -1,6 +1,9 @@
 import {
   Button,
+  Image,
   Modal,
+  Platform,
+  Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -10,10 +13,39 @@ import {
 } from "react-native";
 import Colors from "../util/Colors";
 import ExitButton from "../components/Buttons/ExitButton";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 
 function NewItemModal({ active, onExit }) {
-    
+  const [activePicker, setActivePicker] = useState(false);
+  const [dateSelected, setDateSelected] = useState(new Date().toDateString());
+  const [displayedDate, setDisplayedDate] = useState(new Date());
+  const [previewPhoto, setPreviewPhoto] = useState(require('../assets/Images/no-image.png'))
+
+  const changeDateHandler = ({ type }, selectedDate) => {
+    if (type === "set") {
+      setDisplayedDate(selectedDate);
+      if (Platform.OS === "android") {
+        setActivePicker(false);
+        setDateSelected(selectedDate.toDateString());
+      }
+    } else {
+      datePickerHandler();
+    }
+  };
+
+  const datePickerHandler = () => {
+    setActivePicker(!activePicker);
+  };
+
+  const iosDateAssignHandler = () => {
+    setDateSelected(displayedDate.toDateString());
+    datePickerHandler(false);
+  };
+
+  const openCameraHandler = () => {
+    console.log('pressed')
+  }
 
   return (
     <Modal visible={active} animationType="slide">
@@ -56,7 +88,40 @@ function NewItemModal({ active, onExit }) {
             </View>
             <View style={styles.formGroup}>
               <Text style={styles.label}>Fecha: </Text>
-              
+              <Pressable onPress={datePickerHandler}>
+                <TextInput
+                  style={[styles.inputDesign]}
+                  value={dateSelected}
+                  editable={false}
+                  onPressIn={datePickerHandler}
+                />
+              </Pressable>
+              {activePicker && (
+                <DateTimePicker
+                  mode="date"
+                  display="spinner"
+                  value={displayedDate}
+                  onChange={changeDateHandler}
+                />
+              )}
+              {activePicker && Platform.OS === "ios" && (
+                <View style={styles.iOSButtonLayout}>
+                  <Button
+                    color={"red"}
+                    title="Cancelar"
+                    onPress={datePickerHandler}
+                  />
+                  <Button title="Confirmar" onPress={iosDateAssignHandler} />
+                </View>
+              )}
+            </View>
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Foto: </Text>
+              <View style={styles.photoPreviewContainer}>
+                <Pressable onPress={openCameraHandler}>
+                  <Image style={styles.photoPreview} source={previewPhoto}/>
+                </Pressable>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -98,6 +163,20 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     overflow: "scroll",
   },
+  iOSButtonLayout: {
+    flexDirection: "row",
+    justifyContent: "center",
+    columnGap: 40,
+  },
+  photoPreviewContainer: {
+    backgroundColor: '#F7F7F7',
+    height: 200,
+    borderRadius: 10,
+  },
+  photoPreview: {
+    width: '100%',
+    height: '100%'
+  }
 });
 
 export default NewItemModal;
