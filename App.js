@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { Platform, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Platform, SafeAreaView, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Login from "./screens/Login/Login";
@@ -9,10 +9,10 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1}}>
       <View style={styles.container}>
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName="login">
+        <NavigationContainer theme={{colors: 'white'}}>
+          <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName="login">
             <Stack.Screen name="login" component={Login} />
             <Stack.Screen name="Home" component={Home} />
           </Stack.Navigator>
