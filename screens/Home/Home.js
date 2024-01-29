@@ -33,7 +33,6 @@ function Home() {
   useEffect(() => {
     const loadData = async () => {
         const retrievedData = await fetchData();
-        console.log(retrievedData)
         setStoredData(retrievedData)
     }
     if(isFocused){

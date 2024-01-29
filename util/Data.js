@@ -39,13 +39,14 @@ export const insertData = (data) => {
           data.doctor,
           data.symptoms,
           data.phoneNo,
-          data.imgUri,
+          data.imageUri,
           data.date,
         ],
         (_, result) => {
           resolve(result);
         },
         (_, error) => {
+            console.log(error)
           reject(error);
         }
       );
