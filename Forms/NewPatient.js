@@ -24,9 +24,16 @@ function NewPatient({ onExit, onRetrieveBundle }) {
     imageUri: "",
     date: new Date().toDateString(),
   });
+  const [enableButton, setEnableButton] = useState({
+    nameValid: false,
+    doctorValid: false,
+    phoneValid: false,
+    symptomsValid: false,
+    imageValid: false,
+  });
+  const [err, setErr] = useState(false)
 
-  useEffect(() => {
-  }, [data])
+  useEffect(() => {}, [data]);
 
   const retrieveDate = (dateRetrieved) => {
     setData({
@@ -37,15 +44,23 @@ function NewPatient({ onExit, onRetrieveBundle }) {
 
   const retrieveImageUri = (imgUriRetrieved) => {
     setData({
-        ...data,
-        imageUri: imgUriRetrieved
-    })
-  }
+      ...data,
+      imageUri: imgUriRetrieved,
+    });
+    setEnableButton({
+      ...enableButton,
+      imageValid: imgUriRetrieved ? true : false,
+    });
+  };
 
   const nameChangeHandler = (nameInput) => {
     setData({
       ...data,
       name: nameInput,
+    });
+    setEnableButton({
+      ...enableButton,
+      nameValid: nameInput ? true : false,
     });
   };
 
@@ -54,12 +69,32 @@ function NewPatient({ onExit, onRetrieveBundle }) {
       ...data,
       doctor: doctorInput,
     });
+    setEnableButton({
+      ...enableButton,
+      doctorValid: doctorInput ? true : false,
+    });
+  };
+
+  const phoneCheck = (phoneSet) => {
+    const phoneRx = /^\d{10}$/;
+    if(phoneRx.test(phoneSet) === false) return false
+    return true;
   };
 
   const phoneChangeHandler = (phoneInput) => {
-    setData({
-      ...data,
-      phoneNo: +phoneInput,
+    if (phoneCheck(phoneInput)) {
+      setData({
+        ...data,
+        phoneNo: +phoneInput,
+      });
+
+      setErr(false)
+    }else{
+      setErr(true)
+    }
+    setEnableButton({
+      ...enableButton,
+      phoneValid: phoneCheck(phoneInput),
     });
   };
 
@@ -68,12 +103,24 @@ function NewPatient({ onExit, onRetrieveBundle }) {
       ...data,
       symptoms: symptomsInput,
     });
+    setEnableButton({
+      ...enableButton,
+      symptomsValid: symptomsInput ? true : false,
+    });
   };
 
   const submitData = async () => {
+    if (
+      !enableButton.nameValid ||
+      !enableButton.doctorValid ||
+      !enableButton.phoneValid ||
+      !enableButton.symptomsValid ||
+      !enableButton.imageValid
+    )
+      return;
     onRetrieveBundle(data);
     await insertData(data);
-    //resetData();
+    resetData();
   };
 
   const resetData = () => {
@@ -85,6 +132,13 @@ function NewPatient({ onExit, onRetrieveBundle }) {
       phoneNo: 0,
       imgUri: "",
       date: new Date().toDateString(),
+    });
+    setEnableButton({
+      nameValid: false,
+      doctorValid: false,
+      phoneValid: false,
+      symptomsValid: false,
+      imageValid: false,
     });
   };
   return (
@@ -102,6 +156,7 @@ function NewPatient({ onExit, onRetrieveBundle }) {
               placeholder="Ingresa el nombre del paciente"
               onChangeText={nameChangeHandler}
               autoCorrect={false}
+              maxLength={150}
             />
           </View>
           <View style={styles.formGroup}>
@@ -111,6 +166,7 @@ function NewPatient({ onExit, onRetrieveBundle }) {
               placeholder="Ingresa el nombre del doctor atendiendo"
               onChangeText={doctorChangeHandler}
               autoCorrect={false}
+              maxLength={150}
             />
           </View>
           <View style={styles.formGroup}>
@@ -122,7 +178,13 @@ function NewPatient({ onExit, onRetrieveBundle }) {
               autoCorrect={false}
               inputMode="numeric"
               keyboardType="numeric"
+              maxLength={10}
             />
+            {err && (
+              <Text style={{ color: "red"}}>
+                Ingrese un valor numerico correcto
+              </Text>
+            )}
           </View>
           <View style={styles.formGroup}>
             <Text style={styles.label}>Malestar: </Text>
@@ -132,15 +194,25 @@ function NewPatient({ onExit, onRetrieveBundle }) {
               style={[styles.inputDesign, styles.textArea]}
               placeholder="Detalla los malestares presentes del paciente"
               onChangeText={symptomsChangeHandler}
+              maxLength={1024}
             />
           </View>
           <View style={styles.formGroup}>
             <DatePicker onRetrieveDate={retrieveDate} />
           </View>
           <View style={styles.formGroup}>
-            <ImagePicker onRetrieveUri={retrieveImageUri}/>
+            <ImagePicker onRetrieveUri={retrieveImageUri} />
           </View>
-          <LoginButton enable={true} onPress={submitData} />
+          <LoginButton
+            enable={
+              enableButton.nameValid &&
+              enableButton.doctorValid &&
+              enableButton.phoneValid &&
+              enableButton.symptomsValid &&
+              enableButton.imageValid
+            }
+            onPress={submitData}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

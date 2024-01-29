@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import ItemCard from "../../components/Cards/ItemCard";
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused } from "@react-navigation/native";
 import { fetchData } from "../../util/Data";
 
 import ActionButton from "../../components/Buttons/ActionButton";
 import NewItemModal from "../../Modals/NewItemModal";
+import SearchBar from "../../components/SearchBar/SearchBar";
 
 function Home() {
   const [activeModal, setActiveModal] = useState(false);
-  const [storedData, setStoredData] = useState([])
-  
+  const [storedData, setStoredData] = useState();
+  const [searchedPatients, setSearchedPatients] = useState([]);
+
   const isFocused = useIsFocused();
 
   const addNewItemHandler = () => {
@@ -18,39 +20,57 @@ function Home() {
   };
 
   const modalHandler = () => {
-    setActiveModal(!activeModal)
-  }
+    setActiveModal(!activeModal);
+  };
 
   const loadBundleToStack = (bundle) => {
     // console.log(bundle)
-    setActiveModal(false)
-    setStoredData(currentList => [
-        ...currentList,
-        bundle
-    ])
-  }
+    setActiveModal(false);
+    setSearchedPatients((currentList) => [...currentList, bundle]);
+  };
+
+  const retrieveSearchData = (searchString) => {
+    if (storedData)
+      setSearchedPatients(
+        storedData.filter(
+          ({ name, doctor, symptoms }) =>
+            name.includes(searchString) ||
+            doctor.includes(searchString) ||
+            symptoms.includes(searchString)
+        )
+      );
+  };
+
+  const loadData = async () => {
+    const retrievedData = await fetchData();
+    setStoredData(
+      retrievedData.sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+    );
+    setSearchedPatients(retrievedData);
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-        const retrievedData = await fetchData();
-        setStoredData(retrievedData)
+    if (isFocused && !storedData) {
+      loadData();
     }
-    if(isFocused){
-        loadData()
-    }
-  }, [])
+  }, [storedData]);
 
   return (
     <View style={styles.homeContainer}>
       <Text style={styles.homeTitle}>Lista de enfermedades</Text>
+      <SearchBar searchData={retrieveSearchData} />
       <FlatList
-        data={storedData}
+        data={searchedPatients}
         renderItem={({ item }) => <ItemCard patientData={item} />}
         keyExtractor={(item) => item.id}
       />
 
       <ActionButton onPress={addNewItemHandler} />
-      <NewItemModal active={activeModal} onExit={modalHandler} onRetrieveBundle={loadBundleToStack}/>
+      <NewItemModal
+        active={activeModal}
+        onExit={modalHandler}
+        onRetrieveBundle={loadBundleToStack}
+      />
     </View>
   );
 }

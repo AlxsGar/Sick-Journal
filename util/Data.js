@@ -46,7 +46,6 @@ export const insertData = (data) => {
           resolve(result);
         },
         (_, error) => {
-            console.log(error)
           reject(error);
         }
       );
@@ -62,16 +61,14 @@ export const fetchData = () => {
         "SELECT * FROM patients",
         [],
         (_, result) => {
-            const patients = [];
-            for(const pd of result.rows._array){
-                patients.push(pd)
-            }
-            console.log(patients)
-            resolve(patients)
+          const patients = [];
+          for (const pd of result.rows._array) {
+            patients.push(pd);
+          }
+          resolve(patients);
         },
         (_, error) => {
-            console.log("fetch"+error);
-            reject(error)
+          reject(error);
         }
       );
     });

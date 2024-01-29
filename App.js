@@ -6,7 +6,6 @@ import Login from "./screens/Login/Login";
 import Home from "./screens/Home/Home";
 import { useEffect, useState } from "react";
 import { init } from "./util/Data";
-import AppLoading from 'expo-app-loading';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,7 +22,7 @@ export default function App() {
   }, []);
 
   if(!dbInit){
-    return <AppLoading/>
+    
   }
 
   return (
@@ -45,6 +44,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: Platform.select({ android: 24, ios: 0 }),
-    paddingHorizontal: 12,
+    paddingHorizontal: 6,
   },
 });

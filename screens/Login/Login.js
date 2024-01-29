@@ -1,9 +1,9 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import LoginButton from "../../components/Buttons/LoginButton";
 import Colors from "../../util/Colors";
 import { useState } from "react";
 
-function Login({navigation}) {
+function Login({ navigation }) {
   const [emailInput, setEmailInput] = useState("");
   const [passInput, setPassInput] = useState("");
   const [enableButton, setEnableButton] = useState({
@@ -12,6 +12,10 @@ function Login({navigation}) {
   });
 
   const emailRx = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+  const userData = {
+    email: "jhon@mail.com",
+    password: "77@1$.",
+  };
 
   const emailInputHandler = (inputEmail) => {
     if (emailRx.test(inputEmail) === false) {
@@ -23,14 +27,23 @@ function Login({navigation}) {
   };
 
   const passInputHandler = (inputPass) => {
-    if(inputPass) setEnableButton({ ...enableButton, passValid: true });
+    if (inputPass) setEnableButton({ ...enableButton, passValid: true });
     else setEnableButton({ ...enableButton, passValid: false });
     setPassInput(inputPass);
   };
 
   const submitHandler = () => {
-    navigation.navigate('Home')
-  }
+    if ((emailInput !== userData.email || passInput !== userData.password) && enableButton.emailValid && enableButton.passValid) {
+      Alert.alert(
+        "Usuario o cantraseña incorrecta",
+        "Ingrese los datos de nuevo."
+      );
+      return;
+    }
+    if (enableButton.emailValid && enableButton.passValid && emailInput === userData.email && passInput === userData.password) {
+      navigation.navigate("Home");
+    }
+  };
 
   return (
     <View style={styles.loginContainer}>
@@ -44,18 +57,22 @@ function Login({navigation}) {
         <TextInput
           style={styles.loginInput}
           keyboardType="email-address"
+          autoCapitalize="none"
           placeholder="Correo"
           onChangeText={emailInputHandler}
           autoCorrect={false}
+          maxLength={100}
         />
         <TextInput
           style={styles.loginInput}
           secureTextEntry={true}
           placeholder="Contraseña"
           onChangeText={passInputHandler}
+          maxLength={100}
         />
         <LoginButton
-          enable={enableButton.emailValid && enableButton.passValid} onPress={submitHandler}
+          enable={enableButton.emailValid && enableButton.passValid}
+          onPress={submitHandler}
         />
       </View>
     </View>
