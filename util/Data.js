@@ -1,39 +1,79 @@
-const userData = {
-  email: "jhon@mail.com",
-  password: "77@1$",
+import * as sqlite from "expo-sqlite";
+
+const database = sqlite.openDatabase("patients.db");
+
+export const init = () => {
+  const promise = new Promise((resolve, reject) => {
+    database.transaction((tx) => {
+      tx.executeSql(
+        `CREATE TABLE IF NOT EXISTS patients (
+                id INTEGER PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                doctor TEXT NOT NULL,
+                symptoms TEXT NOT NULL,
+                phoneNo INTEGER NOT NULL,
+                imageUri TEXT NOT NULL,
+                date TEXT NOT NULL
+            )`,
+        [],
+        () => {
+          resolve();
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+
+  return promise;
 };
 
-export default userData;
+export const insertData = (data) => {
+  const promise = new Promise((resolve, reject) => {
+    database.transaction((tx) => {
+      tx.executeSql(
+        `INSERT INTO patients (name, doctor, symptoms, phoneNo, imageUri, date) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          data.name,
+          data.doctor,
+          data.symptoms,
+          data.phoneNo,
+          data.imgUri,
+          data.date,
+        ],
+        (_, result) => {
+          resolve(result);
+        },
+        (_, error) => {
+          reject(error);
+        }
+      );
+    });
+  });
+  return promise;
+};
 
-const patientData = [
-  {
-    id: 'a1',
-    name: "Paco Ramirez",
-    symptoms: "Dolor en el pecho y en la espalda, dificultad para respirar.",
-    doctor: "Ismael Contreras",
-    phoneNo: 443952119,
-  },
-  {
-    id: 'b1',
-    name: "Diana Ramirez",
-    symptoms: "Dolor de cabeza",
-    doctor: "Ismael Contreras",
-    phoneNo: 443952119,
-  },
-  {
-    id: 'c1',
-    name: "Omar Ramirez",
-    symptoms: "Fiebre con tos seca",
-    doctor: "Ismael Contreras",
-    phoneNo: 443952119,
-  },
-  {
-    id: 'd1',
-    name: "Gabriela Ramirez",
-    symptoms: "Mareos y nausea",
-    doctor: "Ismael Contreras",
-    phoneNo: 443952119,
-  },
-];
-
-export { patientData };
+export const fetchData = () => {
+  const promise = new Promise((resolve, reject) => {
+    database.transaction((tx) => {
+      tx.executeSql(
+        "SELECT * FROM patients",
+        [],
+        (_, result) => {
+            const patients = [];
+            for(const pd of result.rows._array){
+                patients.push(pd)
+            }
+            console.log(patients)
+            resolve(patients)
+        },
+        (_, error) => {
+            console.log("fetch"+error);
+            reject(error)
+        }
+      );
+    });
+  });
+  return promise;
+};

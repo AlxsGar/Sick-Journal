@@ -26,6 +26,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermision": "Se necesita acceso a la camara para tomar foto a la receta."
+        }
+      ]
+    ]
   }
 }

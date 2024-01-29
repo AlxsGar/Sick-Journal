@@ -4,10 +4,28 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Login from "./screens/Login/Login";
 import Home from "./screens/Home/Home";
+import { useEffect, useState } from "react";
+import { init } from "./util/Data";
+import AppLoading from 'expo-app-loading';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+
+  const [dbInit, setDbInit] = useState(false)
+
+  useEffect(() => {
+    init().then(() => {
+      setDbInit(true)
+    }).catch((err) => {
+      console.log(err);
+    });
+  }, []);
+
+  if(!dbInit){
+    return <AppLoading/>
+  }
+
   return (
     <SafeAreaView style={{ flex: 1}}>
       <View style={styles.container}>

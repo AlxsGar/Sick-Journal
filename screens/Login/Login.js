@@ -46,6 +46,7 @@ function Login({navigation}) {
           keyboardType="email-address"
           placeholder="Correo"
           onChangeText={emailInputHandler}
+          autoCorrect={false}
         />
         <TextInput
           style={styles.loginInput}

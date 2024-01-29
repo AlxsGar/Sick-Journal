@@ -16,7 +16,7 @@ function LoginButton({ enable, onPress }) {
         onPress={onPress}
         android_ripple={{ color: enabledButton ? Colors.accentColor200 : 'gray' }}   
       >
-        <Text style={styles.buttonText}>Iniciar Sesión</Text>
+        <Text style={styles.buttonText}>Ingresar</Text>
       </Pressable>
     </View>
   );

@@ -4,7 +4,7 @@ function ItemCard({patientData}) {
   return (
     <View style={styles.cardContainer}>
       <View style={styles.imageContainer}>
-        <Image style={styles.medicNote} source={require("../../assets/Images/no-image.png")} />
+        <Image style={styles.medicNote} source={{uri: patientData.imageUri}} />
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.patientInfo}><Text style={styles.span}>Paciente:</Text> {patientData.name}</Text>

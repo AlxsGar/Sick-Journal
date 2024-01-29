@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Image,
   Modal,
@@ -14,13 +15,30 @@ import {
 import Colors from "../util/Colors";
 import ExitButton from "../components/Buttons/ExitButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  launchCameraAsync,
+  useCameraPermissions,
+  PermissionStatus,
+} from "expo-image-picker";
 import { useState } from "react";
+import LoginButton from "../components/Buttons/LoginButton";
+import { insertData } from "../util/Data";
 
-function NewItemModal({ active, onExit }) {
+function NewItemModal({ active, onExit, onRetrieveBundle }) {
+  const [data, setData] = useState({
+    id: Math.ceil(Math.random() * 100),
+    name: "",
+    symptoms: "",
+    doctor: "",
+    phoneNo: 0,
+    imageUri: "",
+    date: new Date().toDateString(),
+  });
   const [activePicker, setActivePicker] = useState(false);
   const [dateSelected, setDateSelected] = useState(new Date().toDateString());
   const [displayedDate, setDisplayedDate] = useState(new Date());
-  const [previewPhoto, setPreviewPhoto] = useState(require('../assets/Images/no-image.png'))
+  const [previewPhoto, setPreviewPhoto] = useState();
+  const [cameraPermission, requestPermission] = useCameraPermissions();
 
   const changeDateHandler = ({ type }, selectedDate) => {
     if (type === "set") {
@@ -28,6 +46,10 @@ function NewItemModal({ active, onExit }) {
       if (Platform.OS === "android") {
         setActivePicker(false);
         setDateSelected(selectedDate.toDateString());
+        setData({
+          ...data,
+          date: selectedDate.toDateString(),
+        });
       }
     } else {
       datePickerHandler();
@@ -40,12 +62,92 @@ function NewItemModal({ active, onExit }) {
 
   const iosDateAssignHandler = () => {
     setDateSelected(displayedDate.toDateString());
+    setData({
+      ...data,
+      date: displayedDate.toDateString(),
+    });
     datePickerHandler(false);
   };
 
-  const openCameraHandler = () => {
-    console.log('pressed')
-  }
+  const permissionCheck = async () => {
+    if (cameraPermission.status === PermissionStatus.UNDETERMINED) {
+      const permissionResponse = await requestPermission();
+
+      return permissionResponse.granted;
+    }
+
+    if (cameraPermission.status === PermissionStatus.DENIED) {
+      Alert.alert(
+        "No se dio acceso a la camara.",
+        "Se require acceso a la camara para tomar la foto de la receta."
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  const openCameraHandler = async () => {
+    const permissionStatus = await permissionCheck();
+    if (!permissionStatus) return;
+    const imageTaken = await launchCameraAsync({
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.5,
+    });
+    setPreviewPhoto(imageTaken.assets[0].uri);
+    setData({
+      ...data,
+      imageUri: imageTaken.assets[0].uri,
+    });
+  };
+
+  const nameChangeHandler = (nameInput) => {
+    setData({
+      ...data,
+      name: nameInput,
+    });
+  };
+
+  const doctorChangeHandler = (doctorInput) => {
+    setData({
+      ...data,
+      doctor: doctorInput,
+    });
+  };
+
+  const phoneChangeHandler = (phoneInput) => {
+    setData({
+      ...data,
+      phoneNo: +phoneInput,
+    });
+  };
+
+  const symptomsChangeHandler = (symptomsInput) => {
+    setData({
+      ...data,
+      symptoms: symptomsInput,
+    });
+  };
+
+  const submitData = async () => {
+    onRetrieveBundle(data);
+    await insertData(data)
+    resetData();
+  };
+
+  const resetData = () => {
+    setData({
+      id: Math.ceil(Math.random() * 100),
+      name: "",
+      symptoms: "",
+      doctor: "",
+      phoneNo: 0,
+      imgUri: "",
+      date: new Date().toDateString(),
+    });
+    setPreviewPhoto();
+  };
 
   return (
     <Modal visible={active} animationType="slide">
@@ -61,6 +163,8 @@ function NewItemModal({ active, onExit }) {
               <TextInput
                 style={styles.inputDesign}
                 placeholder="Ingresa el nombre del paciente"
+                onChangeText={nameChangeHandler}
+                autoCorrect={false}
               />
             </View>
             <View style={styles.formGroup}>
@@ -68,6 +172,8 @@ function NewItemModal({ active, onExit }) {
               <TextInput
                 style={styles.inputDesign}
                 placeholder="Ingresa el nombre del doctor atendiendo"
+                onChangeText={doctorChangeHandler}
+                autoCorrect={false}
               />
             </View>
             <View style={styles.formGroup}>
@@ -75,6 +181,10 @@ function NewItemModal({ active, onExit }) {
               <TextInput
                 style={styles.inputDesign}
                 placeholder="Ingresa el télefono del paciente"
+                onChangeText={phoneChangeHandler}
+                autoCorrect={false}
+                inputMode="numeric"
+                keyboardType="numeric"
               />
             </View>
             <View style={styles.formGroup}>
@@ -84,11 +194,12 @@ function NewItemModal({ active, onExit }) {
                 numberOfLines={5}
                 style={[styles.inputDesign, styles.textArea]}
                 placeholder="Detalla los malestares presentes del paciente"
+                onChangeText={symptomsChangeHandler}
               />
             </View>
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Fecha: </Text>
               <Pressable onPress={datePickerHandler}>
+                <Text style={styles.label}>Fecha: </Text>
                 <TextInput
                   style={[styles.inputDesign]}
                   value={dateSelected}
@@ -102,6 +213,7 @@ function NewItemModal({ active, onExit }) {
                   display="spinner"
                   value={displayedDate}
                   onChange={changeDateHandler}
+                  textColor="black"
                 />
               )}
               {activePicker && Platform.OS === "ios" && (
@@ -118,11 +230,25 @@ function NewItemModal({ active, onExit }) {
             <View style={styles.formGroup}>
               <Text style={styles.label}>Foto: </Text>
               <View style={styles.photoPreviewContainer}>
-                <Pressable onPress={openCameraHandler}>
-                  <Image style={styles.photoPreview} source={previewPhoto}/>
+                <Pressable
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  onPress={openCameraHandler}
+                >
+                  {!previewPhoto && <Text>Pulse aquí para tomar foto</Text>}
+                  {previewPhoto && (
+                    <Image
+                      style={styles.photoPreview}
+                      source={{ uri: previewPhoto }}
+                    />
+                  )}
                 </Pressable>
               </View>
             </View>
+            <LoginButton enable={true} onPress={submitData} />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -169,14 +295,17 @@ const styles = StyleSheet.create({
     columnGap: 40,
   },
   photoPreviewContainer: {
-    backgroundColor: '#F7F7F7',
+    backgroundColor: "#F7F7F7",
     height: 200,
+    borderWidth: 1,
+    borderColor: "gray",
     borderRadius: 10,
+    overflow: "hidden",
   },
   photoPreview: {
-    width: '100%',
-    height: '100%'
-  }
+    width: "100%",
+    height: "100%",
+  },
 });
 
 export default NewItemModal;
